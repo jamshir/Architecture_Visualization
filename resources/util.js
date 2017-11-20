@@ -34,7 +34,7 @@ async function visualize(fileName){
 			components = data.documentElement.getElementsByTagName("compName");
 		});
 		console.log(appNames);
-		await new Promise(resolve => setTimeout(resolve, 10));
+		await new Promise(resolve => setTimeout(resolve, 40));
 		
 		//for(var i=0; i<appNames.length; i++){
 		tempString = tempString + '{"name": "' + appNames[0].innerHTML + '","children": [';
@@ -73,6 +73,8 @@ function drawCirclePacking(parsedJson){
         .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
         .style("fill", function(d) { return d.children ? color(d.depth) : null; })
         .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
+
+    console.log(circle);
 
     var text = g.selectAll("text")
       .data(nodes)
