@@ -27,7 +27,9 @@
 }
 
 </style>
-<svg width="960" height="960"></svg>
+<body>
+	<svg xmlns="http://www.w3.org/2000/svg" width="960" height="960"></svg>
+</body>
 <script src="../resources/d3.min.js"></script>
 <script src="../resources/util.js"></script>
 <script>
@@ -38,6 +40,7 @@
       diameter = +svg.attr("width"),
       g = svg.append("g").attr("transform", "translate(" + diameter/2 + "," + diameter/2 + ")");
 
+      console.log(svg);
   var color = d3.scaleLinear()
       .domain([-1, 5])
       .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
