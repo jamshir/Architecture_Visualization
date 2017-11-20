@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<analysisResult>
+    <privilegeEscalationInstances>
+        <privilegeEscalationInstance>
+            <senderDsmIdx>0</senderDsmIdx>
+            <senderComponent>LevelUp</senderComponent>
+            <receiverDsmIdx>4</receiverDsmIdx>
+            <receiverComponent>Sender</receiverComponent>
+            <resourceDsmIdx>6</resourceDsmIdx>
+            <resource>SMS</resource>
+        </privilegeEscalationInstance>
+    </privilegeEscalationInstances>
+    <intentSpoofingInstances/>
+    <unauthorizedIntentReceiptInstances/>
+</analysisResult>
