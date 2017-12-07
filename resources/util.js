@@ -1,3 +1,6 @@
+var systemNumber;//TODO make dynamic from the input screen
+var jsonFinal;
+var changedColorIdsApps = [], changedColorIdsComps = [];
 //function to read CSV file from given path
 function readFile(filePath){
     var filePath = filePath;
@@ -5,7 +8,6 @@ function readFile(filePath){
     xmlhttp.open("GET",filePath,false);
     xmlhttp.send(null);
     var fileContent = xmlhttp.responseText;
-    console.log(fileContent);
     return fileContent;
 }
 
@@ -13,17 +15,19 @@ function readFile(filePath){
 async function visualize(fileName){
 	var parsedJson = '{"name": "Android", "children": [';
 	var parsedXML;
-	var appNames, components;
+	var appNames, components, comps;
 	var fileNames = [];
-	
+  var packname;
+	systemNumber = sessionStorage.getItem("sysnum");
+
 	//fetch the names of all the XML files by checking the package names in the CSV file
-	d3.csv("../data/domain-explicit-communication-1.csv", function(data){
+	d3.csv("../data/domain-explicit-communication-" + systemNumber + ".csv", function(data){
 		for(var i=0; i<data.length; i++){
 			if(fileNames.indexOf(data[i].Package) == -1) fileNames.push(data[i].Package);
 		}
 	});
 
-	await new Promise(resolve => setTimeout(resolve, 10));
+	await new Promise(resolve => setTimeout(resolve, 100));
 
 	//create the JSON string
 	var tempString = "";
@@ -31,13 +35,18 @@ async function visualize(fileName){
 
 		d3.xml("../data/app-" + fileNames[x] + ".xml", function(data){
 			appNames = data.documentElement.getElementsByTagName("name");
-			components = data.documentElement.getElementsByTagName("compName");
+			components = data.documentElement.getElementsByTagName("fullName");
+      packname = data.documentElement.getElementsByTagName("packageName");
 		});
-		console.log(appNames);
-		await new Promise(resolve => setTimeout(resolve, 40));
-		
-		//for(var i=0; i<appNames.length; i++){
-		tempString = tempString + '{"name": "' + appNames[0].innerHTML + '","children": [';
+
+
+		await new Promise(resolve => setTimeout(resolve, 100));
+
+
+    //tempString = tempString + '{"name": "' + appNames[0].innerHTML + '","children": [';
+
+    tempString = tempString + '{"name": "' + appNames[0].innerHTML + '", "fullName": "' + packname[0].innerHTML + '", "children": [';
+
 		for(var j=0; j<components.length; j++){
 			tempString = tempString + '{ "name": "' + components[j].innerHTML + '", "size": 1000}';
 			tempString = j<components.length-1 ? (tempString + ",") : tempString;
@@ -51,30 +60,52 @@ async function visualize(fileName){
 	await new Promise(resolve => setTimeout(resolve, 50));
 
 	parsedJson = parsedJson + tempString + "]}";
-
-	drawCirclePacking(parsedJson);
+  jsonFinal = parsedJson;
+	drawCirclePacking(parsedJson, comps);
 }
 
 //this method draws the visualisation
-function drawCirclePacking(parsedJson){
-
+function drawCirclePacking(parsedJson, comps){
     var root = JSON.parse(parsedJson);
     root = d3.hierarchy(root)
         .sum(function(d) { return d.size; })
         .sort(function(a, b) { return b.value - a.value; });
 
-    var focus = root,
-        nodes = pack(root).descendants(),
-        view;
+    var focus = root, nodes = pack(root).descendants(), view;
 
     var circle = g.selectAll("circle")
       .data(nodes)
       .enter().append("circle")
         .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
-        .style("fill", function(d) { return d.children ? color(d.depth) : null; })
-        .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
+        .attr("id", function(d, i){ 
+              //if this is an app node, we give it an id equivalent to it's appname else we give it an id "nApp"
+              if(d.depth === 1) return d.data.fullName;
+              else if(d.depth === 2)
+              {
+                console.log(d.data.name);
+                return d.data.name;
+              } 
+              else return "nApp";
+         })
+        .style("fill", function(d) {
+          return d.children ? color(d.depth) : null; })
+        .on("click", function(d) {
+          //if this is the leaf node, simply call nishanth's code
+          //else have the if condition shown below
 
-    console.log(circle);
+            	if(!d.children && focus !== d.parent) zoom(d.parent), d3.event.stopPropagation();
+              else if(!d.children && focus === d.parent){
+                var cname = d.data.name;
+                var pname = d.parent.data.name;
+                if(pname !== "System"){
+                  sessionStorage.setItem("coname", cname);
+                  sessionStorage.setItem("paname", pname);
+                  window.open("graphs.html");
+                }
+              }
+              else if (focus !== d) zoom(d),
+            		d3.event.stopPropagation();
+        	});
 
     var text = g.selectAll("text")
       .data(nodes)
@@ -82,7 +113,12 @@ function drawCirclePacking(parsedJson){
         .attr("class", "label")
         .style("fill-opacity", function(d) { return d.parent === root ? 1 : 0; })
         .style("display", function(d) { return d.parent === root ? "inline" : "none"; })
-        .text(function(d) { return d.data.name; });
+        .style("word-wrap", "break-word")
+        .text(function(d) { var text = d.data.name;
+          var indx = text.lastIndexOf(".");
+          if(indx!=-1)
+            text = text.substring(indx+1, text.length);
+          return text; });
 
     var node = g.selectAll("circle,text");
 
@@ -110,8 +146,221 @@ function drawCirclePacking(parsedJson){
 
     function zoomTo(v) {
       var k = diameter / v[2]; view = v;
-      node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
-      circle.attr("r", function(d) { return d.r * k; });
+      node.attr("transform", function(d) { 
+        var transl = "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; 
+      	return transl; });
+      circle.attr("r", function(d) { return d.r*k; });
+    }
+}
+
+//method to highlight the apps and components for Privilege Escalation vulnerability
+async function showPrivilegeEscalationApps()
+{
+  resetColor();
+  d3.select("#vulnerability").remove();
+  d3.select("#vul").append("span").attr("id", "vulnerability").attr("class", "attack");
+  d3.select("#vul").text("Privilege Escalation");
+
+  changedColorIdsApps = [];
+  var parsedJson = JSON.parse(jsonFinal);
+
+  var maliciousApps = [], vulnerableApps = [], maliciousComponents = [], vulComponents = [];
+  //parse the analysisresults file and find the apps that are malicious and vulnerable in prvlgescltn
+  d3.xml("../data/analysisResults-" + systemNumber + ".xml", function(data){
+    var privilegeEscalations = data.documentElement.getElementsByTagName("privilegeEscalationInstance");
+
+    for(var i=0; i<privilegeEscalations.length; i++){
+       var malappname = privilegeEscalations[i].children[0].innerHTML;
+       var vulappname = privilegeEscalations[i].children[4].innerHTML;
+       var malcomponent = privilegeEscalations[i].children[1].innerHTML;//fdsafds
+       var vulcomponent = privilegeEscalations[i].children[5].innerHTML;//fdsafds
+       if(maliciousApps.indexOf(malappname) == -1)
+        maliciousApps.push(malappname);
+       if(vulnerableApps.indexOf(vulappname) == -1)
+        vulnerableApps.push(vulappname);
+      //
+      if(maliciousComponents.indexOf(malcomponent) == -1)
+        maliciousComponents.push(malcomponent);
+      if(vulComponents.indexOf(vulcomponent) == -1)
+        vulComponents.push(vulcomponent);
+      //fdsafdsa
+    }
+  });
+
+  await new Promise(resolve => setTimeout(resolve, 100));
+  //change the color of the circles of the apps and components depending on whether they are malicious or vulnerable
+
+  for(var i=0; i<maliciousApps.length; i++){
+    // changecolor of matching appname with id from circle tags
+    var id = "#" + maliciousApps[i];
+    id = id.split('.').join('\\.');
+    var appcircle = d3.select(String(id)).style("fill", "red");
+    changedColorIdsApps.push(id);
+  }
+  for(var i=0; i<vulnerableApps.length; i++){
+    // changecolor of matching appname with id from circle tags
+    var id = "#" + vulnerableApps[i];
+    id = id.split('.').join('\\.');
+    var appcircle = d3.select(String(id)).style("fill", "DarkSlateBlue");
+    changedColorIdsApps.push(id);
+  }
+  for(var i=0; i<maliciousComponents.length; i++){
+    // changecolor of matching component name with id from circle tags
+    var id = "#" + maliciousComponents[i];
+    id = id.split('.').join('\\.');
+    var compcircle = d3.selectAll(String(id)).style("fill", "orange");
+    changedColorIdsComps.push(id);
+  }
+  for(var i=0; i<vulComponents.length; i++){
+    // changecolor of matching component name with id from circle tags
+    var id = "#" + vulComponents[i];
+    id = id.split('.').join('\\.');
+    var compcircle = d3.selectAll(String(id)).style("fill", "green");
+    changedColorIdsComps.push(id);
+  }
+}
+
+//method to highlight the apps and components for Intent Spoofing vulnerability
+async function showIntentSpoofingApps()
+{
+  resetColor();
+  d3.select("#vulnerability").remove();
+  d3.select("#vul").append("span").attr("id", "vulnerability").attr("class", "attack");
+  d3.select("#vul").text("Intent Spoofing");
+  changedColorIdsApps = [];
+  var parsedJson = JSON.parse(jsonFinal);
+
+  var maliciousApps = [], vulnerableApps = [], maliciousComponents = [], vulComponents = [];
+  //parse the analysisresults file and find the apps that are malicious and vulnerable in Intent spoofing
+  d3.xml("../data/analysisResults-" + systemNumber + ".xml", function(data){
+    var intentspoofs = data.documentElement.getElementsByTagName("intentSpoofingInstance");
+
+    for(var i=0; i<intentspoofs.length; i++){
+       var malappname = intentspoofs[i].children[0].innerHTML;
+       var vulappname = intentspoofs[i].children[4].innerHTML;
+       var malcomponent = intentspoofs[i].children[1].innerHTML;
+       var vulcomponent = intentspoofs[i].children[5].innerHTML;
+       if(maliciousApps.indexOf(malappname) == -1)
+        maliciousApps.push(malappname);
+       if(vulnerableApps.indexOf(vulappname) == -1)
+        vulnerableApps.push(vulappname);
+      if(maliciousComponents.indexOf(malcomponent) == -1)
+        maliciousComponents.push(malcomponent);
+      if(vulComponents.indexOf(vulcomponent) == -1)
+        vulComponents.push(vulcomponent);
+      //fdsafdsa
+    }
+  });
+
+  await new Promise(resolve => setTimeout(resolve, 100));
+  //change the color of the circles of the apps depending on whether they are malicious (red) or vulnerable (blue)
+
+  for(var i=0; i<maliciousApps.length; i++){
+    // changecolor to red of matching appname with id from circle tags
+    var id = "#" + maliciousApps[i];
+    id = id.split('.').join('\\.');
+    var appcircle = d3.select(String(id)).style("fill", "red");
+    changedColorIdsApps.push(id);
+  }
+  for(var i=0; i<vulnerableApps.length; i++){
+    // changecolor to blue of matching appname with id from circle tags
+    var id = "#" + vulnerableApps[i];
+    id = id.split('.').join('\\.');
+    var appcircle = d3.select(String(id)).style("fill", "DarkSlateBlue");
+    changedColorIdsApps.push(id);
+  }
+  for(var i=0; i<maliciousComponents.length; i++){
+    // changecolor of matching component name with id from circle tags
+    var id = "#" + maliciousComponents[i];
+    id = id.split('.').join('\\.');
+    var compcircle = d3.selectAll(String(id)).style("fill", "orange");
+    changedColorIdsComps.push(id);
+  }
+  for(var i=0; i<vulComponents.length; i++){
+    // changecolor of matching component name with id from circle tags
+    var id = "#" + vulComponents[i];
+    id = id.split('.').join('\\.');
+    var compcircle = d3.selectAll(String(id)).style("fill", "green");
+    changedColorIdsComps.push(id);
+  }
+}
+
+//method to highlight the apps and components for Unathorized Intent Receipt vulnerability
+async function showUnauthorizedIntentApps()
+{
+  resetColor();
+
+  d3.select("#vulnerability").remove();
+  d3.select("#vul").append("span").attr("id", "vulnerability");
+  d3.select("#vul").text("Unauthorized Intent Receipt");
+  changedColorIdsApps = [];
+  var parsedJson = JSON.parse(jsonFinal);
+
+  var maliciousApps = [], vulnerableApps = [], maliciousComponents = [], vulComponents = [];
+  //parse the analysisresults file and find the apps that are malicious and vulnerable in Intent spoofing
+  d3.xml("../data/analysisResults-" + systemNumber + ".xml", function(data){
+    var unauthrecpts = data.documentElement.getElementsByTagName("unauthorizedIntentReceiptInstance");
+
+    for(var i=0; i<unauthrecpts.length; i++){
+       var malappname = unauthrecpts[i].children[0].innerHTML;
+       var vulappname = unauthrecpts[i].children[4].innerHTML;
+       var malcomponent = unauthrecpts[i].children[1].innerHTML;
+       var vulcomponent = unauthrecpts[i].children[5].innerHTML;
+       if(maliciousApps.indexOf(malappname) == -1)
+        maliciousApps.push(malappname);
+       if(vulnerableApps.indexOf(vulappname) == -1)
+        vulnerableApps.push(vulappname);
+      if(maliciousComponents.indexOf(malcomponent) == -1)
+        maliciousComponents.push(malcomponent);
+      if(vulComponents.indexOf(vulcomponent) == -1)
+        vulComponents.push(vulcomponent);
+      //fdsafdsa
+    }
+  });
+
+  await new Promise(resolve => setTimeout(resolve, 100));
+  //change the color of the circles of the apps depending on whether they are malicious (red) or vulnerable (DarkSlateBlue)
+
+  for(var i=0; i<maliciousApps.length; i++){
+    // changecolor to red of matching appname with id from circle tags
+    var id = "#" + maliciousApps[i];
+    id = id.split('.').join('\\.');
+    var appcircle = d3.select(String(id)).style("fill", "red");
+    changedColorIdsApps.push(id);
+  }
+  for(var i=0; i<vulnerableApps.length; i++){
+    // changecolor to blue of matching appname with id from circle tags
+    var id = "#" + vulnerableApps[i];
+    id = id.split('.').join('\\.');
+    var appcircle = d3.select(String(id)).style("fill", "DarkSlateBlue");
+    changedColorIdsApps.push(id);
+  }
+  for(var i=0; i<maliciousComponents.length; i++){
+    // changecolor of matching component name with id from circle tags
+    var id = "#" + maliciousComponents[i];
+    id = id.split('.').join('\\.');
+    var compcircle = d3.selectAll(String(id)).style("fill", "orange");
+    changedColorIdsComps.push(id);
+  }
+  for(var i=0; i<vulComponents.length; i++){
+    // changecolor of matching component name with id from circle tags
+    var id = "#" + vulComponents[i];
+    id = id.split('.').join('\\.');
+    var compcircle = d3.selectAll(String(id)).style("fill", "green");
+    changedColorIdsComps.push(id);
+  }
+}
+
+//reset color method resets the colors of the visualization
+async function resetColor(){
+  d3.select("#vul").text("");
+  if(changedColorIdsApps.length != 0)
+    for(var i = 0; i<changedColorIdsApps.length; i++){
+      var resetAppColor = d3.select(changedColorIdsApps[i]).style("fill", color(1));
     }
 
+if(changedColorIdsComps.length != 0)
+    for(var i = 0; i<changedColorIdsComps.length; i++){
+      var resetAppColor = d3.selectAll(changedColorIdsComps[i]).style("fill", "white");
+    }
 }
