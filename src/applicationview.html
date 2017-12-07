@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.node {
+  cursor: pointer;
+}
+
+.node:hover {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.node--leaf {
+  fill: white;
+}
+
+.label {
+  font: 15px bold Arial, sans-serif;
+  text-anchor: middle;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+}
+
+.label,
+.node--root {
+  pointer-events: none;
+}
+
+.myButton {
+  margin: 8px 10px 8px 10px;
+  font: 15px bold Arial, sans-serif;
+}
+
+</style>
+
+<style type="text/css">
+  .legend { list-style: none; }
+.legend span { border: 1px solid #ccc; float: left; width: 16px; height: 16px; }
+/* your colors */
+.legend .maliciousapp { background-color: red; }
+.legend .vulnerableapp { background-color: DarkSlateBlue; }
+.legend .maliciouscomp { background-color: orange; }
+.legend .vulnerablecomp { background-color: green; }
+</style>
+
+
+<title>DELDroid Architecture</title>
+
+<body style="background-color: yellow">
+    
+    <div style = "float: left">
+      <p style="margin: 8px 10px 8px 10px; font-weight: bold;font-size: 28px; text-decoration: underline;">Application View</p>
+      <button type="button" class ="myButton" onclick="showPrivilegeEscalationApps()">Privilege Escalation Attack</button><br>
+      <button type="button" class ="myButton" onclick="showIntentSpoofingApps()">Intent Spoofing</button><br>
+      <button type="button" class ="myButton" onclick="showUnauthorizedIntentApps()">Unauthorized Intent Receipt</button><br>
+      <button type="button" class ="myButton" onclick="resetColor()">Reset Visualization</button>
+      <li style="margin-top: 5px; font-weight: bold;font-size: 17px;text-decoration: underline;list-style-type:square; margin-top: 20px"  id="vul"></li>
+      
+      <span id = "vulnerability"></span>
+
+      <ul class="legend" style="font-weight: bold;font-size: 16px; margin-top: 10px; margin-right: 15px">
+          <li><span class="maliciousapp"></span>Malicious Application</li><br>
+          <li><span class="vulnerableapp"></span>Vulnerable Application</li><br>
+          <li><span class="maliciouscomp"></span>Malicious Component</li><br>
+          <li><span class="vulnerablecomp"></span>Vulnerable Component</li><br>
+      </ul> <br />
+      
+    </div>  
+    <svg width="960" height="960"></svg>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="http://evanplaice.github.io/jquery-csv/src/jquery.csv.min.js"></script>
+    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.js?2.6.0"></script>
+    <script src="../resources/d3.min.js"></script>
+    <script src="../resources/util.js"></script>
+    <script>
+
+      //Initialize the values of the layout
+      var svg = d3.select("svg");
+      var margin = 20;
+      var diameter = +svg.attr("width");
+      var trans = "translate(" + (diameter/2) + "," + (diameter/2) + ")"
+      //var trans = translate(rad, rad);
+      var g = svg.append("g").attr("transform", trans);
+      //console.log(g);
+      //var color = d3.scaleLinear().domain([-1, 5]).range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"]).interpolate(d3.interpolateHcl);
+      var color = d3.scaleLinear().domain([-1, 5]).range(["rgb(255,255,0)", "rgb(128,128,0)"]).interpolate(d3.interpolateHcl);
+      var pack = d3.pack().size([diameter - margin, diameter - margin]).padding(2);
+
+      var parsedJson = visualize();
+      
+    </script>
+</body>
