@@ -81,7 +81,7 @@
 	function generategraph(data,uri,sarg,parg,visualizationOption){
 		
 
-		var w = 1020, h = 720;
+		var w = window.screen.availWidth - 260, h = 720;
 	      var labelDistance = 0;
 
 	      var vis = d3.select("body").append("svg:svg").attr("width", w).attr("height", h).style("border-style", "solid").style("border-width", "2px").style("float","right");

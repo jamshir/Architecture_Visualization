@@ -82,7 +82,8 @@
                 if(d.depth === 1) return d.data.fullName;
                 else if(d.depth === 2)
                 {
-                  console.log(d.data.name);
+                  var text = d.data.name;
+                  text = text.replace(/\$/g, '');
                   return d.data.name;
                 } 
                 else return "nApp";
@@ -163,6 +164,7 @@
     d3.select("#vul").text("Privilege Escalation");
 
     changedColorIdsApps = [];
+    changedColorIdsComps = [];
     var parsedJson = JSON.parse(jsonFinal);
 
     var maliciousApps = [], vulnerableApps = [], maliciousComponents = [], vulComponents = [];
@@ -195,6 +197,7 @@
       // changecolor of matching appname with id from circle tags
       var id = "#" + maliciousApps[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var appcircle = d3.select(String(id)).style("fill", "red");
       changedColorIdsApps.push(id);
     }
@@ -202,6 +205,7 @@
       // changecolor of matching appname with id from circle tags
       var id = "#" + vulnerableApps[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var appcircle = d3.select(String(id)).style("fill", "DarkSlateBlue");
       changedColorIdsApps.push(id);
     }
@@ -209,6 +213,7 @@
       // changecolor of matching component name with id from circle tags
       var id = "#" + maliciousComponents[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var compcircle = d3.selectAll(String(id)).style("fill", "orange");
       changedColorIdsComps.push(id);
     }
@@ -216,6 +221,7 @@
       // changecolor of matching component name with id from circle tags
       var id = "#" + vulComponents[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var compcircle = d3.selectAll(String(id)).style("fill", "green");
       changedColorIdsComps.push(id);
     }
@@ -229,6 +235,7 @@
     d3.select("#vul").append("span").attr("id", "vulnerability").attr("class", "attack");
     d3.select("#vul").text("Intent Spoofing");
     changedColorIdsApps = [];
+    changedColorIdsComps = [];
     var parsedJson = JSON.parse(jsonFinal);
 
     var maliciousApps = [], vulnerableApps = [], maliciousComponents = [], vulComponents = [];
@@ -260,6 +267,7 @@
       // changecolor to red of matching appname with id from circle tags
       var id = "#" + maliciousApps[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var appcircle = d3.select(String(id)).style("fill", "red");
       changedColorIdsApps.push(id);
     }
@@ -267,6 +275,7 @@
       // changecolor to blue of matching appname with id from circle tags
       var id = "#" + vulnerableApps[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var appcircle = d3.select(String(id)).style("fill", "DarkSlateBlue");
       changedColorIdsApps.push(id);
     }
@@ -274,6 +283,7 @@
       // changecolor of matching component name with id from circle tags
       var id = "#" + maliciousComponents[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var compcircle = d3.selectAll(String(id)).style("fill", "orange");
       changedColorIdsComps.push(id);
     }
@@ -281,6 +291,7 @@
       // changecolor of matching component name with id from circle tags
       var id = "#" + vulComponents[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var compcircle = d3.selectAll(String(id)).style("fill", "green");
       changedColorIdsComps.push(id);
     }
@@ -295,6 +306,7 @@
     d3.select("#vul").append("span").attr("id", "vulnerability");
     d3.select("#vul").text("Unauthorized Intent Receipt");
     changedColorIdsApps = [];
+    changedColorIdsComps = [];
     var parsedJson = JSON.parse(jsonFinal);
 
     var maliciousApps = [], vulnerableApps = [], maliciousComponents = [], vulComponents = [];
@@ -326,6 +338,7 @@
       // changecolor to red of matching appname with id from circle tags
       var id = "#" + maliciousApps[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var appcircle = d3.select(String(id)).style("fill", "red");
       changedColorIdsApps.push(id);
     }
@@ -333,6 +346,7 @@
       // changecolor to blue of matching appname with id from circle tags
       var id = "#" + vulnerableApps[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var appcircle = d3.select(String(id)).style("fill", "DarkSlateBlue");
       changedColorIdsApps.push(id);
     }
@@ -340,6 +354,7 @@
       // changecolor of matching component name with id from circle tags
       var id = "#" + maliciousComponents[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var compcircle = d3.selectAll(String(id)).style("fill", "orange");
       changedColorIdsComps.push(id);
     }
@@ -347,6 +362,7 @@
       // changecolor of matching component name with id from circle tags
       var id = "#" + vulComponents[i];
       id = id.split('.').join('\\.');
+      id = id.replace(/\$/g, '');
       var compcircle = d3.selectAll(String(id)).style("fill", "green");
       changedColorIdsComps.push(id);
     }
